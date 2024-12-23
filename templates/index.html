@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plank Position Analysis</title>
+</head>
+<body>
+    <h1>Plank Position Analysis</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file">Upload a video:</label>
+        <input type="file" name="file" id="file" accept="video/*" onchange="previewVideo(event)">
+        <button type="submit">Upload</button>
+    </form>
+    <br>
+    <form action="/capture" method="get">
+        <button type="submit">Capture from Camera</button>
+    </form>
+    <br>
+    <video id="videoPreview" width="600" controls></video>
+
+    <script>
+        function previewVideo(event) {
+            const file = event.target.files[0];
+            const videoPreview = document.getElementById('videoPreview');
+            const fileURL = URL.createObjectURL(file);
+            videoPreview.src = fileURL;
+            videoPreview.load();
+            videoPreview.play();
+        }
+    </script>
+</body>
+</html>

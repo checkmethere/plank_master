@@ -4,20 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plank Position Analysis</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Plank Position Analysis</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <label for="file">Upload a video:</label>
-        <input type="file" name="file" id="file" accept="video/*" onchange="previewVideo(event)">
-        <button type="submit">Upload</button>
-    </form>
-    <br>
-    <form action="/capture" method="get">
-        <button type="submit">Capture from Camera</button>
-    </form>
-    <br>
-    <video id="videoPreview" width="600" controls></video>
+    <div class="container mt-5">
+        <h1 class="text-center">Plank Position Analysis</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data" class="mb-4">
+            <div class="form-group">
+                <label for="file">Upload a video:</label>
+                <input type="file" name="file" id="file" accept="video/*" class="form-control-file" onchange="previewVideo(event)">
+            </div>
+            <button type="submit" class="btn btn-primary">Upload Plank video</button>
+        </form>
+        <form action="/capture" method="get" class="mb-4">
+            <button type="submit" class="btn btn-secondary">Capture from Camera</button>
+        </form>
+        <button onclick="analysePlank()" class="btn btn-success mb-4">Analyse Plank</button>
+        <h2>Input Video</h2>
+        <video id="videoPreview" width="100%" controls class="mb-4"></video>
+        <h2>Processed Video</h2>
+        <video id="processedVideo" width="100%" controls>
+            <source src="/output/output.mov" type="video/mov">
+            Your browser does not support the video tag.
+        </video>
+    </div>
 
     <script>
         function previewVideo(event) {
@@ -28,6 +38,13 @@
             videoPreview.load();
             videoPreview.play();
         }
+
+        function analysePlank() {
+            window.location.href = '/analyse';
+        }
     </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

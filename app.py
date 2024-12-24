@@ -7,18 +7,16 @@ import os
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['OUTPUT_FOLDER'] = 'output'
 
 # Initialize MediaPipe Pose.
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
-# Create the screenshots directory if it doesn't exist.
-if not os.path.exists('screenshots'):
-    os.makedirs('screenshots')
-
-# Create the uploads directory if it doesn't exist.
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+# Create the necessary directories if they don't exist.
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+os.makedirs('screenshots', exist_ok=True)
 
 
 def calculate_angle(a, b, c):
@@ -76,7 +74,6 @@ def upload():
     if file:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(file_path)
-        process_video(file_path)
         return redirect(url_for('index'))
 
 
@@ -86,11 +83,26 @@ def capture():
     return redirect(url_for('index'))
 
 
+@app.route('/analyse')
+def analyse():
+    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+    if not uploaded_files:
+        return redirect(url_for('index'))
+
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_files[0])  # Assuming only one file is uploaded
+    process_video(file_path)
+    return render_template('index.html', processed_video=True)
+
+
 def process_video(file_name):
     try:
         cap = cv2.VideoCapture(file_name)
         if not cap.isOpened():
             raise ValueError(f"Error opening video file or device: {file_name}")
+
+        # Define the codec and create VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        video_output = cv2.VideoWriter(os.path.join(app.config['OUTPUT_FOLDER'], 'output.mov'), fourcc, 20.0, (int(cap.get(3)), int(cap.get(4))), True)
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -135,9 +147,6 @@ def process_video(file_name):
                              tuple(np.multiply(shoulder, [1, 1]).astype(int)), (0, 255, 0), 3)
                     cv2.line(image, tuple(np.multiply(shoulder, [1, 1]).astype(int)),
                              tuple(np.multiply(hip, [1, 1]).astype(int)), (0, 255, 0), 3)
-
-                    cv2.imshow('Plank Position', image)
-                    save_screenshot(image)
                 elif angle > 180 or headshoulderhipangle < 175:
                     cv2.putText(image, 'Bad Plank', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
                     cv2.line(image, tuple(np.multiply(shoulder, [1, 1]).astype(int)),
@@ -148,13 +157,11 @@ def process_video(file_name):
                     cv2.putText(image, 'Adjust Plank', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
                                 cv2.LINE_AA)
 
-            # Display the frame.
-            cv2.imshow('Plank Position', image)
-
-            if cv2.waitKey(10) & 0xFF == ord('q'):
-                break
+            # Write the frame into the file 'output.mov'
+            video_output.write(image)
 
         cap.release()
+        video_output.release()
         cv2.destroyAllWindows()
     except cv2.error as e:
         print(f"OpenCV error: {e}")
